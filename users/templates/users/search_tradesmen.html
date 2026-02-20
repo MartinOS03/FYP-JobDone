@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tradesman Directory - JobDone</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #3b82f6;
+            --bg: #f4f6fb;
+            --card: #ffffff;
+            --muted: #6b7280;
+            --shadow: 0 18px 44px rgba(15, 23, 42, 0.12);
+            --radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Inter", "Helvetica Neue", sans-serif;
+            background: radial-gradient(circle at top, rgba(59, 130, 246, 0.08), transparent 55%), var(--bg);
+            margin: 0;
+            padding: 40px 24px 60px;
+            color: var(--primary);
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        header h1 {
+            font-size: 2.6rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--muted);
+            max-width: 620px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        form {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 18px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--muted);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            text-align: left;
+        }
+
+        input, select {
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            padding: 12px 14px;
+            font-size: 1rem;
+            transition: 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .form-actions {
+            margin-top: 22px;
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            padding: 12px 20px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 16px 30px rgba(37, 99, 235, 0.25);
+            transition: transform 0.18s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .link-reset {
+            color: var(--muted);
+            font-weight: 600;
+            text-decoration: none;
+            align-self: center;
+        }
+
+        section.results {
+            margin-top: 32px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .card header {
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin: 0;
+        }
+
+        .card header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #f97316;
+            background: rgba(249, 115, 22, 0.12);
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+
+        .badge.muted {
+            color: var(--muted);
+            background: rgba(148, 163, 184, 0.18);
+        }
+
+        .meta {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        .card footer {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .chip {
+            background: rgba(37, 99, 235, 0.08);
+            color: #1d4ed8;
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .button-link {
+            background: #fff;
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: 999px;
+            padding: 8px 14px;
+            text-decoration: none;
+            color: #1d4ed8;
+            font-weight: 600;
+            transition: background 0.2s ease;
+        }
+
+        .button-link:hover {
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        .empty-state {
+            background: rgba(15, 23, 42, 0.05);
+            border: 1px dashed rgba(59, 130, 246, 0.35);
+            border-radius: var(--radius);
+            padding: 36px;
+            text-align: center;
+        }
+
+        footer.back {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        @media (max-width: 660px) {
+            body {
+                padding: 28px 16px 40px;
+            }
+
+            header h1 {
+                font-size: 2.2rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .link-reset {
+                align-self: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <header>
+            <h1>Tradesman Directory</h1>
+            <p>Search verified professionals, explore detailed profiles and reach out directly to get your job done.</p>
+        </header>
+
+        <form method="get">
+            <div class="filter-grid">
+                <label>
+                    Search
+                    <input type="text" name="q" value="{{ filters.q }}" placeholder="Name, company or keyword">
+                </label>
+                <label>
+                    Trade
+                    <input type="text" name="trade" value="{{ filters.trade }}" placeholder="Electrician, plumber...">
+                </label>
+                <label>
+                    Location
+                    <input type="text" name="location" value="{{ filters.location }}" placeholder="County or town">
+                </label>
+                <label>
+                    Minimum rating
+                    <select name="min_rating">
+                        <option value="">Any</option>
+                        {% for rating in rating_choices %}
+                            <option value="{{ rating }}" {% if filters.min_rating == rating|stringformat:"s" %}selected{% endif %}>
+                                {{ rating }}+
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+            <div class="form-actions">
+                <button type="submit">Update results</button>
+                <a href="{% url 'search_tradesmen' %}" class="link-reset">Reset</a>
+            </div>
+        </form>
+
+        <section class="results">
+            {% if tradesmen %}
+                <div class="grid">
+                    {% for t in tradesmen %}
+                        <div class="card">
+                            <header>
+                                <h3>{{ t.display_name }}</h3>
+                                {% if t.avg_rating %}
+                                    <span class="badge">Rating: {{ t.avg_rating }}/5</span>
+                                {% else %}
+                                    <span class="badge muted">Awaiting reviews</span>
+                                {% endif %}
+                            </header>
+                            <p class="meta"><strong>Trade:</strong> {{ t.trade|default:"Not specified" }}</p>
+                            <p class="meta"><strong>Service area:</strong> {{ t.service_area|default:t.location|default:"Nationwide" }}</p>
+                            {% if t.years_experience %}
+                                <p class="meta"><strong>Experience:</strong> {{ t.years_experience }} years</p>
+                            {% endif %}
+                            {% if t.hourly_rate %}
+                                <span class="chip">€{{ t.hourly_rate }} / hr</span>
+                            {% endif %}
+                            {% if t.services_offered %}
+                                <p class="meta">{{ t.services_offered|truncatechars:140 }}</p>
+                            {% endif %}
+                            <footer>
+                                {% if t.user.id in favourite_tradesman_ids %}
+                                    <a href="{% url 'toggle_favourite' t.user.id %}?next={{ request.get_full_path }}" class="button-link">★ Saved</a>
+                                {% else %}
+                                    <a href="{% url 'toggle_favourite' t.user.id %}?next={{ request.get_full_path }}" class="button-link">☆ Save</a>
+                                {% endif %}
+                                <a href="{% url 'tradesman_profile_detail' t.id %}" class="button-link">View profile</a>
+                                <a href="/chat/" class="button-link">Message</a>
+                            </footer>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <h3>No tradesmen match your filters yet</h3>
+                    <p>Try adjusting the filters or <a href="{% url 'post_open_job' %}">post your job</a> to notify tradesmen.</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <footer class="back">
+            <a href="{% url 'dashboard' %}" class="link-reset">← Back to dashboard</a>
+        </footer>
+    </main>
+</body>
+</html>

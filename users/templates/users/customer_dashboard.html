@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer Dashboard - JobDone</title>
+    <style>
+        :root {
+            --primary: #007bff;
+            --bg: #f5f5f5;
+            --card-bg: #ffffff;
+            --text: #333;
+            --muted: #666;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        header {
+            max-width: 1100px;
+            margin: 0 auto 32px;
+            text-align: left;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        header p {
+            margin: 0 0 16px;
+            color: var(--muted);
+            font-size: 1rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .button {
+            background-color: var(--primary);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        .button.secondary {
+            background-color: #fff;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .button.secondary:hover {
+            background-color: #f0f0f0;
+        }
+
+        .button.tertiary {
+            background-color: #e9ecef;
+            color: var(--text);
+        }
+
+        .flash-messages {
+            max-width: 1100px;
+            margin: 0 auto 20px;
+        }
+
+        .flash {
+            padding: 14px 18px;
+            border-radius: var(--radius);
+            background: #fff;
+            box-shadow: var(--shadow);
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .filters {
+            background: var(--card-bg);
+            border: 1px solid #ddd;
+            padding: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+        }
+
+        label {
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        input, select {
+            border: 1px solid #ccc;
+            padding: 8px;
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus {
+            outline: 1px solid var(--primary);
+        }
+
+        .filter-actions {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .link-reset {
+            color: var(--muted);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .results {
+            max-width: 1100px;
+            margin: 32px auto 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid #ddd;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .rating {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #f97316;
+        }
+
+        .rating.muted {
+            color: var(--muted);
+        }
+
+        .trade {
+            font-size: 1rem;
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .meta {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .card-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .empty-state {
+            background: #f8f9fa;
+            border: 1px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .requests {
+            margin: 30px auto 0;
+            background: var(--card-bg);
+            border: 1px solid #ddd;
+            padding: 20px;
+            max-width: 1100px;
+        }
+
+        .requests table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 18px;
+        }
+
+        .requests th, .requests td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+        }
+
+        .requests th {
+            background: #e9ecef;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.85rem;
+        }
+
+        .status-pill.pending { background: #fff3cd; color: #856404; }
+        .status-pill.awaiting_confirmation { background: #ffeaa7; color: #b45309; }
+        .status-pill.completed { background: #d4edda; color: #155724; }
+        .status-pill.in_progress { background: #d1ecf1; color: #0c5460; }
+
+        .requests .action-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .requests .empty {
+            text-align: center;
+            color: var(--muted);
+            padding: 18px 0;
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 24px 16px 40px;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+
+            .card-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome, {{ user.username }}</h1>
+        <p>Find tradesmen and manage your job requests.</p>
+        <div class="actions">
+            <a href="{% url 'search_tradesmen' %}" class="button">Browse Directory</a>
+            <a href="{% url 'favourites_list' %}" class="button tertiary">★ My Favourites</a>
+            <a href="{% url 'post_open_job' %}" class="button secondary">+ Post Open Job</a>
+            <a href="{% url 'notifications' %}" class="button secondary">Notifications {% if unread_notifications > 0 %}({{ unread_notifications }}){% endif %}</a>
+            <a href="{% url 'logout' %}" class="button secondary" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">Logout</a>
+            <a href="/chat/" class="button tertiary">View Chats</a>
+        </div>
+    </header>
+
+    {% if messages %}
+        <div class="flash-messages">
+            {% for message in messages %}
+                <div class="flash {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <section class="filters">
+        <form method="get" action="{% url 'dashboard' %}">
+            <div class="filter-grid">
+                <label>
+                    Search
+                    <input type="text" name="q" placeholder="Name, trade or keyword" value="{{ filters.q }}">
+                </label>
+                <label>
+                    Trade
+                    <input type="text" name="trade" placeholder="e.g. Plumber" value="{{ filters.trade }}">
+                </label>
+                <label>
+                    Location
+                    <input type="text" name="location" placeholder="County or town" value="{{ filters.location }}">
+                </label>
+                <label>
+                    Minimum Rating
+                    <select name="min_rating">
+                        <option value="">Any</option>
+                        {% for rating in rating_choices %}
+                            <option value="{{ rating }}" {% if filters.min_rating == rating|stringformat:"s" %}selected{% endif %}>
+                                {{ rating }}+
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    Minimum Experience (years)
+                    <input type="number" name="min_experience" placeholder="e.g. 5" value="{{ filters.min_experience }}" min="0">
+                </label>
+                <label>
+                    Availability
+                    <input type="text" name="availability" placeholder="e.g. Weekdays, Weekends" value="{{ filters.availability }}">
+                </label>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="button">Update Results</button>
+                <a href="{% url 'dashboard' %}" class="link-reset">Reset filters</a>
+            </div>
+        </form>
+    </section>
+
+    <section class="results">
+        {% if tradesmen %}
+            <div class="grid">
+                {% for profile in tradesmen %}
+                    <article class="card">
+                        <div class="card-header">
+                            <h3>{{ profile.display_name }}</h3>
+                            {% if profile.avg_rating %}
+                                <span class="rating">Rating: {{ profile.avg_rating }}/5</span>
+                            {% else %}
+                                <span class="rating muted">No reviews yet</span>
+                            {% endif %}
+                        </div>
+                        <p class="trade">{{ profile.trade|default:"Trade not specified" }}</p>
+                        <p class="meta">
+                            <strong>Location:</strong>
+                            {{ profile.service_area|default:profile.location|default:"Nationwide" }}
+                        </p>
+                        {% if profile.years_experience %}
+                            <p class="meta"><strong>Experience:</strong> {{ profile.years_experience }} years</p>
+                        {% endif %}
+                        {% if profile.services_offered %}
+                            <p class="meta">
+                                <strong>Services:</strong> {{ profile.services_offered|truncatechars:120 }}
+                            </p>
+                        {% endif %}
+                        <div class="card-actions">
+                            {% if profile.user.id in favourite_tradesman_ids %}
+                                <a href="{% url 'toggle_favourite' profile.user.id %}?next={{ request.get_full_path }}" class="button tertiary">★ Saved</a>
+                            {% else %}
+                                <a href="{% url 'toggle_favourite' profile.user.id %}?next={{ request.get_full_path }}" class="button tertiary">☆ Save</a>
+                            {% endif %}
+                            <a href="{% url 'tradesman_profile_detail' profile.id %}" class="button secondary">View Profile</a>
+                            <a href="/chat/" class="button tertiary">Message</a>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <h3>No tradesmen match your filters yet</h3>
+                <p>Try broadening your search or post your job to the open board to let tradesmen come to you.</p>
+                <a href="{% url 'post_open_job' %}" class="button secondary">Post an open job</a>
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="requests">
+        <div class="header">
+            <h2>Your job requests</h2>
+            <p class="meta">Track requests you've sent to tradesmen and confirm completion codes when the work is done.</p>
+        </div>
+        {% if my_requests %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tradesman</th>
+                        <th>Service</th>
+                        <th>Status</th>
+                        <th>Requested</th>
+                        <th>Next step</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in my_requests %}
+                        <tr>
+                            <td>{{ req.job.owner.profile.display_name|default:req.job.owner.username }}</td>
+                            <td>{{ req.job.title }}</td>
+                            <td>
+                                <span class="status-pill {{ req.status }}">{{ req.get_status_display }}</span>
+                            </td>
+                            <td>{{ req.date_requested|date:"M d, Y" }}</td>
+                            <td>
+                                {% if req.status == 'awaiting_confirmation' %}
+                                    <a class="action-link" href="{% url 'confirm_completion' req.id %}">Enter code</a>
+                                {% elif req.status == 'completed' and not req.review %}
+                                    <a class="action-link" href="{% url 'submit_review' req.id %}">Leave review</a>
+                                {% elif req.status == 'completed' and req.review %}
+                                    Rating: {{ req.review.rating }}/5
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty">
+                <p>You haven’t sent any job requests yet. Start by browsing the directory above or post an open job.</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <footer>
+        <a href="/" class="link-reset">← Back to home</a>
+    </footer>
+</body>
+</html>
+

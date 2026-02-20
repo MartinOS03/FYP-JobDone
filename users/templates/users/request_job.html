@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Request Job - JobDone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f9fc;
+            text-align: center;
+            margin-top: 80px;
+        }
+        form {
+            display: inline-block;
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            width: 400px;
+        }
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-family: Arial, sans-serif;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h2>Send Request for {{ job.title }}</h2>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <textarea name="message" placeholder="Enter your message to the tradesman..." required></textarea><br>
+        <label style="display:block; margin-top:10px;">Add photos (optional)</label>
+        <input type="file" name="images" accept="image/*" multiple><br>
+        <button type="submit">Send Request</button>
+    </form>
+
+    <br>
+    <a href="/api/users/dashboard/">⬅ Back to Dashboard</a>
+</body>
+</html>

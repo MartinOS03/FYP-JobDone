@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Job Request Details - JobDone</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --accent: #f97316;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+            --radius: 20px;
+            --muted: #64748b;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: radial-gradient(circle at top, rgba(37, 99, 235, 0.12), transparent 60%), var(--bg);
+            margin: 0;
+            padding: 50px 20px;
+            color: #0f172a;
+        }
+
+        .container {
+            background: var(--card);
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 32px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        h2 {
+            margin: 12px 0 16px;
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .status {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            background: rgba(37, 99, 235, 0.12);
+            color: var(--primary-dark);
+        }
+
+        .status.completed {
+            background: rgba(34, 197, 94, 0.18);
+            color: #15803d;
+        }
+
+        .status.awaiting_confirmation {
+            background: rgba(249, 115, 22, 0.15);
+            color: #c2410c;
+        }
+
+        .status.pending {
+            background: rgba(107, 114, 128, 0.12);
+            color: var(--muted);
+        }
+
+        .info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+            color: var(--muted);
+        }
+
+        .info strong {
+            color: #0f172a;
+        }
+
+        .message {
+            background: rgba(37, 99, 235, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .message h3 {
+            margin-top: 0;
+            color: var(--primary-dark);
+        }
+
+        .actions {
+            background: rgba(37, 99, 235, 0.08);
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .actions.awaiting {
+            background: rgba(249, 115, 22, 0.08);
+        }
+
+        .actions.success {
+            background: rgba(34, 197, 94, 0.08);
+        }
+
+        .actions h3 {
+            margin-top: 0;
+        }
+
+        .actions p {
+            margin: 10px 0;
+            color: var(--muted);
+        }
+
+        .primary {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 12px 24px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 18px 40px rgba(37, 99, 235, 0.25);
+        }
+
+        .code {
+            font-size: 1.8rem;
+            letter-spacing: 0.28em;
+            font-weight: 700;
+            color: #c2410c;
+            margin: 14px 0;
+        }
+
+        blockquote {
+            margin: 16px 0;
+            padding-left: 16px;
+            border-left: 4px solid rgba(37, 99, 235, 0.25);
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+        }
+
+        .link {
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        @media (max-width: 620px) {
+            body {
+                padding: 32px 16px;
+            }
+
+            .container {
+                padding: 28px;
+            }
+
+            .status {
+                position: static;
+                display: inline-block;
+                margin-bottom: 12px;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span class="status {{ job_request.status }}">
+            {{ job_request.get_status_display }}
+        </span>
+
+        <h2>{{ job_request.job.title }}</h2>
+
+        <div class="info">
+            <p><strong>Customer:</strong> {{ job_request.customer.username }}</p>
+            <p><strong>Requested:</strong> {{ job_request.date_requested|date:"M d, Y H:i" }}</p>
+            <p><strong>Location:</strong> {{ job_request.job.location }}</p>
+            {% if job_request.job.hourly_rate %}
+                <p><strong>Quoted rate:</strong> €{{ job_request.job.hourly_rate }}</p>
+            {% endif %}
+        </div>
+
+        <section class="message">
+            <h3>Project details</h3>
+            <p>{{ job_request.message }}</p>
+            {% if job_request.images.all %}
+                <p><strong>Photos from customer:</strong></p>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
+                    {% for img in job_request.images.all %}
+                        <a href="{{ img.image.url }}" target="_blank" rel="noopener"><img src="{{ img.image.url }}" alt="Request photo" style="max-width: 150px; max-height: 150px; object-fit: cover; border-radius: 8px;"></a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+
+        {% if job_request.status == 'pending' %}
+            <section class="actions">
+                <p>Ready to confirm this job with the customer? Generate a completion code when the work is finished so they can verify it.</p>
+                <a href="{% url 'complete_request' job_request.id %}" class="primary">Generate completion code</a>
+            </section>
+        {% elif job_request.status == 'in_progress' %}
+            <section class="actions">
+                <p>This job is currently marked as in progress. When you complete the work, generate a confirmation code to share with the customer.</p>
+                <a href="{% url 'complete_request' job_request.id %}" class="primary">Generate completion code</a>
+            </section>
+        {% elif job_request.status == 'awaiting_confirmation' %}
+            <section class="actions awaiting">
+                <h3>Awaiting customer confirmation</h3>
+                <p>Share this code with the customer. Once they confirm it, the job will be marked complete and you’ll receive their review.</p>
+                <div class="code">{{ job_request.confirmation_code }}</div>
+                <p class="muted">Generated {{ job_request.confirmation_generated_at|date:"M d, Y H:i" }}</p>
+            </section>
+        {% elif job_request.status == 'completed' %}
+            <section class="actions success">
+                <h3>Job completed</h3>
+                <p>Confirmed on {{ job_request.confirmed_at|date:"M d, Y H:i" }}</p>
+                {% if job_request.review %}
+                    <p><strong>Customer rating:</strong> {{ job_request.review.rating }} / 5</p>
+                    {% if job_request.review.comment %}
+                        <blockquote>“{{ job_request.review.comment }}”</blockquote>
+                    {% endif %}
+                {% else %}
+                    <p>Waiting on customer review.</p>
+                {% endif %}
+            </section>
+        {% endif %}
+
+        <div class="footer-links">
+            <a href="{% url 'view_requests' %}" class="link">← Back to requests</a>
+            <a href="{% url 'dashboard' %}" class="link">Back to dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tradesman Dashboard - JobDone</title>
+    <style>
+        :root {
+            --bg: #f3f6fc;
+            --card: #ffffff;
+            --primary: #1d4ed8;
+            --muted: #64748b;
+            --shadow: 0 26px 60px rgba(15, 23, 42, 0.18);
+            --radius: 20px;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: radial-gradient(circle at top, rgba(29, 78, 216, 0.12), transparent 60%), var(--bg);
+            margin: 0;
+            padding: 48px 20px 60px;
+            color: #0f172a;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            gap: 30px;
+        }
+
+        header {
+            display: grid;
+            gap: 8px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.4rem;
+        }
+
+        header p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 18px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, var(--primary), #3b82f6);
+            box-shadow: 0 20px 40px rgba(29, 78, 216, 0.24);
+        }
+
+        .button.secondary {
+            background: rgba(29, 78, 216, 0.08);
+            color: var(--primary);
+            box-shadow: none;
+        }
+
+        section {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 28px;
+        }
+
+        section h2 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 1.4rem;
+        }
+
+        .profile-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .profile-card {
+            background: rgba(29, 78, 216, 0.06);
+            padding: 20px;
+            border-radius: 16px;
+            display: grid;
+            gap: 6px;
+        }
+
+        .profile-card span {
+            color: var(--muted);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.02);
+            border-radius: 16px;
+            padding: 20px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .card h3 {
+            margin: 0;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(29, 78, 216, 0.12);
+            color: var(--primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .empty {
+            text-align: center;
+            color: var(--muted);
+            padding: 18px 0;
+        }
+
+        @media (max-width: 700px) {
+            body {
+                padding: 32px 16px 48px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <header>
+            <h1>Welcome back, {{ user.first_name|default:user.username }}</h1>
+            <p>Keep your profile polished, respond to customer interest and close out jobs to collect reviews.</p>
+            <div class="actions">
+                <a href="{% url 'edit_profile' %}" class="button secondary">Update profile</a>
+                <a href="{% url 'create_job' %}" class="button">Post new service</a>
+                <a href="{% url 'view_requests' %}" class="button secondary">Requests {% if request_count > 0 %}({{ request_count }}){% endif %}</a>
+                <a href="/chat/" class="button secondary">View chats</a>
+                <a href="{% url 'notifications' %}" class="button secondary">Notifications {% if unread_notifications > 0 %}({{ unread_notifications }}){% endif %}</a>
+                <a href="{% url 'logout' %}" class="button secondary" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">Logout</a>
+            </div>
+        </header>
+
+        <section>
+            <h2>Your profile snapshot</h2>
+            <div class="profile-summary">
+                <div class="profile-card">
+                    <strong>Profile completion</strong>
+                    <span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="flex: 1; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div style="background: {% if request.user.profile.completion_percentage >= 80 %}#10b981{% elif request.user.profile.completion_percentage >= 50 %}#f59e0b{% else %}#ef4444{% endif %}; height: 100%; width: {{ request.user.profile.completion_percentage }}%; transition: width 0.3s;"></div>
+                            </div>
+                            <strong>{{ request.user.profile.completion_percentage }}%</strong>
+                        </div>
+                    </span>
+                </div>
+                <div class="profile-card">
+                    <strong>Displayed as</strong>
+                    <span>{{ request.user.profile.display_name }}</span>
+                </div>
+                <div class="profile-card">
+                    <strong>Primary trade</strong>
+                    <span>{{ request.user.profile.trade|default:"Not set" }}</span>
+                </div>
+                <div class="profile-card">
+                    <strong>Average rating</strong>
+                    <span>
+                        {% if request.user.profile.average_rating %}
+                            {{ request.user.profile.average_rating }}/5
+                        {% else %}
+                            Awaiting reviews
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="profile-card">
+                    <strong>Service area</strong>
+                    <span>{{ request.user.profile.service_area|default:request.user.profile.location|default:"Add your service area" }}</span>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Your active services</h2>
+            {% if my_jobs %}
+                <div class="grid">
+                    {% for job in my_jobs %}
+                        <div class="card">
+                            <h3>{{ job.title }}</h3>
+                            <span class="tag">{{ job.location }}</span>
+                            <p>{{ job.description|truncatechars:120 }}</p>
+                            {% if job.hourly_rate %}
+                                <span class="tag">€{{ job.hourly_rate }} / hr</span>
+                            {% endif %}
+                            <small class="muted">Posted {{ job.date_posted|date:"M d, Y" }}</small>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty">
+                    <p>No services listed yet. Post your first offering to appear in customer searches.</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <section>
+            <h2>Open jobs from customers</h2>
+            {% if not request.user.profile.trade %}
+                <div class="empty">
+                    <p>Please set your trade in your profile to see relevant job opportunities.</p>
+                    <a href="{% url 'edit_profile' %}" class="button secondary" style="margin-top: 10px;">Update Profile</a>
+                </div>
+            {% elif open_jobs %}
+                <div class="grid">
+                    {% for job in open_jobs %}
+                        <div class="card">
+                            <h3>{{ job.title }}</h3>
+                            <span class="tag">Customer posted</span>
+                            {% if job.trade %}
+                                <span class="tag" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">{{ job.trade }}</span>
+                            {% endif %}
+                            <p>{{ job.description|truncatechars:140 }}</p>
+                            <span class="muted">{{ job.location }}</span>
+                            <small class="muted">Posted {{ job.date_posted|date:"M d, Y" }}</small>
+                            <div style="margin-top: 12px;">
+                                <a href="{% url 'chat_detail' job.owner.username %}" class="button" style="font-size: 0.9rem; padding: 8px 14px;">Contact Customer</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty">
+                    <p>No open-ended customer jobs for {{ request.user.profile.trade }} right now. Check back soon.</p>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

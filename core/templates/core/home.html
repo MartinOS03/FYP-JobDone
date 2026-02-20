@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobDone - Find Trusted Tradesmen in Ireland</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            padding: 30px 0;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 40px 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .hero h2 {
+            font-size: 2rem;
+            color: #007bff;
+            margin-bottom: 15px;
+        }
+
+        .hero p {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 1rem;
+            text-decoration: none;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 5px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: #007bff;
+            border: 1px solid #007bff;
+        }
+
+        .btn-secondary:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* Features Grid */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .feature-card {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 20px;
+        }
+
+
+        .feature-card h3 {
+            color: #007bff;
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            margin-top: 40px;
+        }
+
+        footer p {
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2.5rem;
+            }
+
+            .tagline {
+                font-size: 1.1rem;
+            }
+
+            .hero {
+                padding: 40px 20px;
+            }
+
+            .hero h2 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">JobDone</div>
+            <p class="tagline">Connecting tradesmen with customers in Ireland</p>
+        </header>
+
+        <div class="hero">
+            <h2>Find the Right Tradesman for Your Job</h2>
+            <p>
+                Whether you need a plumber, electrician, carpenter, or any skilled tradesman, 
+                JobDone makes it easy to find verified professionals in your area. Search by location, 
+                trade, rating, and budget to get the perfect match for your project.
+            </p>
+            <div class="cta-buttons">
+                <a href="/api/users/register/form/" class="btn btn-primary">Get Started</a>
+                <a href="/api/users/login/form/" class="btn btn-secondary">Sign In</a>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <h3>Smart Search</h3>
+                <p>Find tradesmen by trade type, location, rating, and budget. Our advanced filters help you find exactly what you need.</p>
+            </div>
+
+            <div class="feature-card">
+                <h3>Verified Reviews</h3>
+                <p>Read authentic reviews from customers who have worked with tradesmen. Only verified completed jobs can be reviewed.</p>
+            </div>
+
+            <div class="feature-card">
+                <h3>Direct Messaging</h3>
+                <p>Communicate directly with tradesmen through our secure in-app messaging system. Discuss job details and get quotes.</p>
+            </div>
+
+            <div class="feature-card">
+                <h3>Job Confirmation</h3>
+                <p>Our unique confirmation code system ensures jobs are completed before reviews are posted, maintaining trust and quality.</p>
+            </div>
+
+            <div class="feature-card">
+                <h3>Professional Profiles</h3>
+                <p>Tradesmen can showcase their experience, services, and credentials. Build your reputation through quality work.</p>
+            </div>
+
+            <div class="feature-card">
+                <h3>Location Based</h3>
+                <p>Find tradesmen in your local area. Search by location to find professionals near you who understand local needs.</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2025 JobDone. Making home improvements easier, one job at a time.</p>
+        </footer>
+    </div>
+</body>
+</html>

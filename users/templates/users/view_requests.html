@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer Requests - JobDone</title>
+    <style>
+        :root {
+            --bg: #f4f7fb;
+            --card: #ffffff;
+            --primary: #1d4ed8;
+            --muted: #6b7280;
+            --shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+            --radius: 18px;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: radial-gradient(circle at top, rgba(29, 78, 216, 0.12), transparent 60%), var(--bg);
+            margin: 0;
+            padding: 44px 16px 60px;
+            color: #0f172a;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--card);
+            padding: 32px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 2rem;
+        }
+
+        .intro {
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table thead {
+            background: rgba(29, 78, 216, 0.08);
+        }
+
+        .table th, .table td {
+            padding: 14px 16px;
+            text-align: left;
+        }
+
+        .table tbody tr {
+            border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .table tbody tr:hover {
+            background: rgba(29, 78, 216, 0.08);
+        }
+
+        .status {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status.pending { background: rgba(252, 211, 77, 0.2); color: #b45309; }
+        .status.in_progress { background: rgba(14, 165, 233, 0.18); color: #0e7490; }
+        .status.awaiting_confirmation { background: rgba(249, 115, 22, 0.18); color: #c2410c; }
+        .status.completed { background: rgba(34, 197, 94, 0.18); color: #15803d; }
+
+        .empty {
+            text-align: center;
+            padding: 28px;
+            color: var(--muted);
+        }
+
+        .back-link {
+            margin-top: 26px;
+            display: inline-block;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        @media (max-width: 720px) {
+            main {
+                padding: 26px;
+            }
+
+            .table thead {
+                display: none;
+            }
+
+            .table, .table tbody, .table tr, .table td {
+                display: block;
+                width: 100%;
+            }
+
+            .table tr {
+                margin-bottom: 16px;
+                border-radius: 16px;
+                background: rgba(29, 78, 216, 0.05);
+                padding: 12px;
+            }
+
+            .table td {
+                border-bottom: none;
+                padding: 8px 0;
+            }
+
+            .table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                display: block;
+                color: var(--muted);
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Customer job requests</h1>
+        <p class="intro">Review the latest enquiries across your services. Click into a request to view the full message and generate confirmation codes when work is completed.</p>
+
+        {% if requests %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Service</th>
+                        <th>Status</th>
+                        <th>Requested</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                        <tr onclick="window.location='{% url 'request_detail' req.id %}';">
+                            <td data-label="Customer">{{ req.customer.username }}</td>
+                            <td data-label="Service">{{ req.job.title }}</td>
+                            <td data-label="Status">
+                                <span class="status {{ req.status }}">{{ req.get_status_display }}</span>
+                            </td>
+                            <td data-label="Requested">{{ req.date_requested|date:"M d, Y H:i" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty">
+                <p>No job requests just yet. Share your profile and respond quickly to generate momentum.</p>
+            </div>
+        {% endif %}
+
+        <a href="{% url 'dashboard' %}" class="back-link">← Back to dashboard</a>
+    </main>
+</body>
+</html>

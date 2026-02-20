@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Confirm Job Completion - JobDone</title>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --primary: #2563eb;
+            --card: #ffffff;
+            --muted: #64748b;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 40px 16px;
+            color: #0f172a;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: var(--card);
+            padding: 36px;
+            border-radius: 18px;
+            box-shadow: 0 24px 56px rgba(15, 23, 42, 0.16);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: var(--muted);
+            margin: 0 0 18px;
+            line-height: 1.6;
+        }
+
+        form {
+            margin-top: 22px;
+        }
+
+        label {
+            display: block;
+            text-align: left;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--muted);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            font-size: 1rem;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18);
+        }
+
+        button {
+            margin-top: 18px;
+            width: 100%;
+            padding: 12px 18px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), #1d4ed8);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 18px 40px rgba(37, 99, 235, 0.25);
+        }
+
+        .links {
+            margin-top: 24px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .links a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .messages {
+            margin-bottom: 12px;
+        }
+
+        .messages .error {
+            background: rgba(239, 68, 68, 0.12);
+            color: #dc2626;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .messages .success {
+            background: rgba(34, 197, 94, 0.12);
+            color: #15803d;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Confirm job completion</h1>
+        <p>Enter the confirmation code provided by {{ job_request.job.owner.profile.display_name|default:job_request.job.owner.username }} to close out this job.</p>
+
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <label for="confirmation_code">Confirmation code</label>
+            <input type="text" name="confirmation_code" id="confirmation_code" maxlength="12" placeholder="XXXX-XXXX" required>
+            <button type="submit">Confirm completion</button>
+        </form>
+
+        <div class="links">
+            <a href="{% url 'dashboard' %}">← Dashboard</a>
+            <a href="/chat/">Open chat</a>
+        </div>
+    </div>
+</body>
+</html>
+
