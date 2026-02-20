@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify Job Completion - JobDone</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+            --radius: 20px;
+        }
+        body {
+            font-family: "Inter", sans-serif;
+            background: radial-gradient(circle at top, rgba(37, 99, 235, 0.12), transparent 60%), var(--bg);
+            margin: 0;
+            padding: 50px 20px;
+            color: #0f172a;
+        }
+        .container {
+            background: var(--card);
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 36px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        h1 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+        .info {
+            background: rgba(37, 99, 235, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        form {
+            margin-top: 24px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #64748b;
+        }
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            font-size: 1.1rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-align: center;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18);
+        }
+        button {
+            margin-top: 16px;
+            padding: 12px 24px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), #1d4ed8);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 18px 40px rgba(37, 99, 235, 0.25);
+        }
+        .back-link {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .back-link a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Verify Job Completion</h1>
+        <p>The tradesman has marked this job as complete. Enter the confirmation code they provided to verify the work.</p>
+
+        <div class="info">
+            <p><strong>Job:</strong> {{ job.title }}</p>
+            <p><strong>Tradesman:</strong> {{ completion.tradesman.get_full_name|default:completion.tradesman.username }}</p>
+            <p><strong>Completed:</strong> {{ completion.completed_at|date:"M d, Y H:i" }}</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <label for="confirmation_code">Confirmation Code</label>
+            <input type="text" name="confirmation_code" id="confirmation_code" placeholder="Enter 8-character code" maxlength="8" required autofocus>
+            <button type="submit">Verify & Continue to Review</button>
+        </form>
+
+        <div class="back-link">
+            <a href="{% url 'dashboard' %}">← Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

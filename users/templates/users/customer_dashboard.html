@@ -384,6 +384,63 @@
         {% endif %}
     </section>
 
+    {% if my_open_jobs %}
+    <section class="requests" style="margin-top: 40px;">
+        <div class="header">
+            <h2>Your open jobs</h2>
+            <p class="meta">Jobs you posted that tradesmen can complete. Verify completion codes to allow reviews.</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Job Title</th>
+                    <th>Tradesman</th>
+                    <th>Status</th>
+                    <th>Posted</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in my_open_jobs %}
+                    {% for completion in item.awaiting_confirmation %}
+                        <tr>
+                            <td>{{ item.job.title }}</td>
+                            <td>{{ completion.tradesman.get_full_name|default:completion.tradesman.username }}</td>
+                            <td><span class="status-pill awaiting_confirmation">Awaiting Confirmation</span></td>
+                            <td>{{ item.job.date_posted|date:"M d, Y" }}</td>
+                            <td><a class="action-link" href="{% url 'verify_open_job_completion' item.job.id %}">Verify completion</a></td>
+                        </tr>
+                    {% endfor %}
+                    {% for comp_data in item.completed %}
+                        <tr>
+                            <td>{{ item.job.title }}</td>
+                            <td>{{ comp_data.completion.tradesman.get_full_name|default:comp_data.completion.tradesman.username }}</td>
+                            <td><span class="status-pill completed">Completed</span></td>
+                            <td>{{ item.job.date_posted|date:"M d, Y" }}</td>
+                            <td>
+                                {% if comp_data.has_review %}
+                                    Reviewed ({{ comp_data.review_rating }}/5)
+                                {% else %}
+                                    <a class="action-link" href="{% url 'submit_open_job_review' item.job.id comp_data.completion.tradesman.id %}">Leave review</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    {% if not item.awaiting_confirmation and not item.completed %}
+                        <tr>
+                            <td>{{ item.job.title }}</td>
+                            <td>—</td>
+                            <td><span class="status-pill pending">No completions yet</span></td>
+                            <td>{{ item.job.date_posted|date:"M d, Y" }}</td>
+                            <td>—</td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+    {% endif %}
+
     <section class="requests">
         <div class="header">
             <h2>Your job requests</h2>

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Job, JobRequest, JobReview, JobRequestImage
+from .models import Job, JobRequest, JobReview, JobRequestImage, OpenJobCompletion
 
 @admin.register(Job)
 class JobAdmin(admin.ModelAdmin):
@@ -26,3 +26,13 @@ class JobReviewAdmin(admin.ModelAdmin):
 class JobRequestImageAdmin(admin.ModelAdmin):
     list_display = ("job_request", "uploaded_at")
     list_filter = ("uploaded_at",)
+
+
+# Open-ended job completion admin
+# REF-001: Django Admin - ModelAdmin class
+@admin.register(OpenJobCompletion)
+class OpenJobCompletionAdmin(admin.ModelAdmin):
+    list_display = ("job", "tradesman", "status", "completed_at", "confirmed_at")
+    list_filter = ("status", "completed_at")
+    search_fields = ("job__title", "tradesman__username", "confirmation_code")
+    readonly_fields = ("confirmation_code", "confirmation_generated_at", "completed_at", "confirmed_at")

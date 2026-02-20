@@ -68,7 +68,17 @@
                         <p><strong>Rate:</strong> €{{ job.hourly_rate }}</p>
                     {% endif %}
                     <p><small>Posted on: {{ job.date_posted|date:"Y-m-d" }}</small></p>
-                    <a href="{% url 'chat_detail' job.owner.username %}" class="button">Contact Customer</a>
+                    {% if job.id in completed_job_ids %}
+                        <p style="color: green; font-weight: 600;">✓ Job completed and confirmed</p>
+                    {% elif job.id in awaiting_job_ids %}
+                        <p style="color: orange; font-weight: 600;">⏳ Awaiting customer confirmation</p>
+                        <a href="{% url 'mark_open_job_complete' job.id %}" class="button" style="background: #6c757d;">View Code</a>
+                    {% else %}
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <a href="{% url 'chat_detail' job.owner.username %}" class="button">Contact Customer</a>
+                            <a href="{% url 'mark_open_job_complete' job.id %}" class="button" style="background: #28a745;">Job Done</a>
+                        </div>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>

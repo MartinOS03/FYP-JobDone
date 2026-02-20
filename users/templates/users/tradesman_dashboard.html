@@ -238,8 +238,16 @@
                             <p>{{ job.description|truncatechars:140 }}</p>
                             <span class="muted">{{ job.location }}</span>
                             <small class="muted">Posted {{ job.date_posted|date:"M d, Y" }}</small>
-                            <div style="margin-top: 12px;">
-                                <a href="{% url 'chat_detail' job.owner.username %}" class="button" style="font-size: 0.9rem; padding: 8px 14px;">Contact Customer</a>
+                            <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                                {% if job.id in completed_open_job_ids %}
+                                    <span style="color: #10b981; font-weight: 600; font-size: 0.9rem;">✓ Completed</span>
+                                {% elif job.id in awaiting_open_job_ids %}
+                                    <span style="color: #f59e0b; font-weight: 600; font-size: 0.9rem;">⏳ Awaiting confirmation</span>
+                                    <a href="{% url 'mark_open_job_complete' job.id %}" class="button" style="font-size: 0.9rem; padding: 8px 14px; background: #6c757d;">View Code</a>
+                                {% else %}
+                                    <a href="{% url 'chat_detail' job.owner.username %}" class="button" style="font-size: 0.9rem; padding: 8px 14px;">Contact Customer</a>
+                                    <a href="{% url 'mark_open_job_complete' job.id %}" class="button" style="font-size: 0.9rem; padding: 8px 14px; background: #28a745;">Job Done</a>
+                                {% endif %}
                             </div>
                         </div>
                     {% endfor %}

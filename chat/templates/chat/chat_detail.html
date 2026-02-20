@@ -31,7 +31,7 @@
         </div>
         {% if messages %}
             {% for msg in messages %}
-                <div class="message {% if msg.sender == user %}sent{% else %}received{% endif %}">
+                <div class="message {% if msg.sender == request.user %}sent{% else %}received{% endif %}">
                     <p><strong>{{ msg.sender.username }}:</strong> {{ msg.content }}</p>
                     <small style="color: #999; font-size: 0.85rem;">{{ msg.timestamp|date:"M d, Y H:i" }}</small>
                 </div>
@@ -41,11 +41,29 @@
                 <p>No messages yet. Start the conversation!</p>
             </div>
         {% endif %}
-        <form method="POST">
-            {% csrf_token %}
-            <input type="text" name="message" placeholder="Type your message..." required>
-            <button type="submit">Send</button>
-        </form>
+        {% if chat.status == 'active' %}
+            <form method="POST">
+                {% csrf_token %}
+                <input type="text" name="message" placeholder="Type your message..." required>
+                <button type="submit">Send</button>
+            </form>
+            <div style="margin-top: 20px; text-align: center;">
+                <form method="POST" action="{% url 'mark_chat_job_done' chat.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" style="background: #28a745; padding: 10px 20px; border: none; color: white; border-radius: 8px; cursor: pointer;">
+                        ✓ Mark Job as Done
+                    </button>
+                </form>
+                <p style="color: #666; font-size: 0.85rem; margin-top: 8px;">
+                    Mark this chat as complete. Future messages will start a new conversation.
+                </p>
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 20px; background: #d4edda; border-radius: 8px; color: #155724;">
+                <p style="margin: 0; font-weight: 600;">✓ Job Done</p>
+                <p style="margin: 5px 0 0; font-size: 0.9rem;">This conversation is complete. Start a new chat to continue messaging.</p>
+            </div>
+        {% endif %}
     </div>
 </body>
 </html>

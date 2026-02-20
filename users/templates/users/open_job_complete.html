@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Job Marked as Complete - JobDone</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #28a745;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+            --radius: 20px;
+        }
+        body {
+            font-family: "Inter", sans-serif;
+            background: radial-gradient(circle at top, rgba(37, 99, 235, 0.12), transparent 60%), var(--bg);
+            margin: 0;
+            padding: 50px 20px;
+            color: #0f172a;
+        }
+        .container {
+            background: var(--card);
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 32px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        h2 {
+            color: var(--success);
+            margin-top: 0;
+        }
+        .code {
+            font-size: 2rem;
+            letter-spacing: 0.3em;
+            font-weight: 700;
+            color: #c2410c;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(249, 115, 22, 0.1);
+            border-radius: 12px;
+        }
+        .info {
+            background: rgba(37, 99, 235, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 24px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, var(--primary), #1d4ed8);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 18px 40px rgba(37, 99, 235, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>✓ Job Marked as Complete</h2>
+        <p>Share this confirmation code with the customer so they can verify the work is done.</p>
+        
+        <div class="code">{{ confirmation_code }}</div>
+        
+        <div class="info">
+            <p><strong>Job:</strong> {{ job.title }}</p>
+            <p><strong>Customer:</strong> {{ job.owner.get_full_name|default:job.owner.username }}</p>
+            <p><strong>Generated:</strong> {{ completion.confirmation_generated_at|date:"M d, Y H:i" }}</p>
+        </div>
+
+        <p style="color: #64748b;">The customer will receive a notification with this code. Once they verify it, you'll be notified and they can leave a review.</p>
+
+        <a href="{% url 'open_jobs_board' %}" class="button">Back to Open Jobs</a>
+    </div>
+</body>
+</html>

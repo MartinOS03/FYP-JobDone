@@ -53,11 +53,18 @@
 <body>
     <h2>Your Conversations</h2>
 
-    {% if chat_partners %}
+    {% if chat_data %}
         <div class="chat-list">
-            {% for partner in chat_partners %}
-                <div class="chat-item">
-                    <a href="/chat/{{ partner.username }}/">{{ partner.username }}</a>
+            {% for item in chat_data %}
+                <div class="chat-item" onclick="window.location.href='/chat/{{ item.other_user.username }}/'">
+                    <strong>{{ item.other_user.get_full_name|default:item.other_user.username }}</strong>
+                    {% if item.last_message %}
+                        <span style="float: right; color: #999; font-size: 0.85rem;">{{ item.last_message.timestamp|date:"M d, H:i" }}</span>
+                        <div style="color: #666; font-size: 0.9rem; margin-top: 5px;">{{ item.last_message.content|truncatewords:15 }}</div>
+                    {% else %}
+                        <span style="float: right; color: #999; font-size: 0.85rem;">{{ item.chat.created_at|date:"M d, H:i" }}</span>
+                        <div style="color: #666; font-size: 0.9rem; margin-top: 5px;">No messages yet</div>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>

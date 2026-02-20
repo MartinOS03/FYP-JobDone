@@ -78,3 +78,29 @@ class JobRequestImage(models.Model):
     def __str__(self):
         return f"Image for request #{self.job_request_id}"
 
+
+# Open-ended job completion - tracks when tradesmen complete customer-posted open jobs
+# Similar workflow to JobRequest: tradesman marks done → generates code → customer verifies → review
+# REF-001: Django Models Documentation - Model with choices field
+class OpenJobCompletion(models.Model):
+    STATUS_CHOICES = [
+        ('awaiting_confirmation', 'Awaiting Confirmation'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='completions')
+    tradesman = models.ForeignKey(User, on_delete=models.CASCADE, related_name='completed_open_jobs')
+    confirmation_code = models.CharField(max_length=12, unique=True, blank=True, null=True)
+    confirmation_generated_at = models.DateTimeField(blank=True, null=True)
+    confirmed_at = models.DateTimeField(blank=True, null=True)
+    completed_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='awaiting_confirmation')
+
+    class Meta:
+        unique_together = [['job', 'tradesman']]  # One completion per tradesman per job
+        ordering = ['-completed_at']
+
+    def __str__(self):
+        return f"{self.tradesman.username} completed {self.job.title} ({self.status})"
+

@@ -8,7 +8,7 @@ from django.contrib import messages
 from .models import Profile, Notification, Favourite, Qualification
 from django.db import models
 from django.db.models import Avg, Q
-from jobs.models import Job, JobRequest, JobReview, JobRequestImage
+from jobs.models import Job, JobRequest, JobReview, JobRequestImage, OpenJobCompletion
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
@@ -22,8 +22,9 @@ import uuid
 def generate_confirmation_code():
     while True:
         code = uuid.uuid4().hex[:8].upper()
-        # Keep generating until we get a unique one
-        if not JobRequest.objects.filter(confirmation_code=code).exists():
+        # Keep generating until we get a unique one (check both JobRequest and OpenJobCompletion)
+        if not JobRequest.objects.filter(confirmation_code=code).exists() and \
+           not OpenJobCompletion.objects.filter(confirmation_code=code).exists():
             return code
 import json
 
@@ -206,6 +207,16 @@ def dashboard(request):
                     q_trade |= Q(trade__icontains=term)
                 open_jobs = open_jobs.filter(q_trade)
 
+        # Check which open jobs this tradesman has completed
+        completed_open_job_ids = set(
+            OpenJobCompletion.objects.filter(tradesman=request.user, status='completed')
+            .values_list('job_id', flat=True)
+        )
+        awaiting_open_job_ids = set(
+            OpenJobCompletion.objects.filter(tradesman=request.user, status='awaiting_confirmation')
+            .values_list('job_id', flat=True)
+        )
+
         # Count of how many job requests customers have sent them
         request_count = JobRequest.objects.filter(job__owner=request.user).count()
         
@@ -216,7 +227,9 @@ def dashboard(request):
             'my_jobs': my_jobs,
             'open_jobs': open_jobs,
             'request_count': request_count,
-            'unread_notifications': unread_notifications
+            'unread_notifications': unread_notifications,
+            'completed_open_job_ids': completed_open_job_ids,
+            'awaiting_open_job_ids': awaiting_open_job_ids,
         })
 
     # CUSTOMER DASHBOARD SECTION
@@ -303,6 +316,34 @@ def dashboard(request):
             .filter(customer=request.user)
             .order_by('-date_requested')
         )
+        # Get open jobs this customer posted and their completion status
+        my_open_jobs = Job.objects.filter(owner=request.user, owner__profile__role='customer').order_by('-date_posted')
+        open_jobs_with_completions = []
+        for job in my_open_jobs:
+            completions = OpenJobCompletion.objects.filter(job=job).select_related('tradesman').order_by('-completed_at')
+            completed_list = []
+            for comp in completions.filter(status='completed'):
+                # Check if review exists for this completion
+                tradesman_job = Job.objects.filter(owner=comp.tradesman, title__startswith=f"Completed: {job.title}").first()
+                has_review = False
+                review_rating = None
+                if tradesman_job:
+                    job_req = JobRequest.objects.filter(job=tradesman_job, customer=request.user).first()
+                    if job_req and hasattr(job_req, 'review'):
+                        has_review = True
+                        review_rating = job_req.review.rating
+                completed_list.append({
+                    'completion': comp,
+                    'has_review': has_review,
+                    'review_rating': review_rating,
+                })
+            open_jobs_with_completions.append({
+                'job': job,
+                'completions': completions,
+                'awaiting_confirmation': completions.filter(status='awaiting_confirmation'),
+                'completed': completed_list,
+            })
+        
         # REF-005: Django ORM - values_list() for favourite IDs (Iteration 4 US 29)
         favourite_tradesman_ids = set(
             Favourite.objects.filter(customer=request.user).values_list('tradesman_id', flat=True)
@@ -321,6 +362,7 @@ def dashboard(request):
             },
             'rating_choices': range(1, 6),
             'my_requests': my_requests,
+            'my_open_jobs': open_jobs_with_completions,
             'unread_notifications': unread_notifications,
             'favourite_tradesman_ids': favourite_tradesman_ids,
         })
@@ -489,6 +531,17 @@ def confirm_completion(request, request_id):
             job_request.status = 'completed'
             job_request.confirmed_at = timezone.now()
             job_request.save()
+            
+            # Mark chat as JobDone if one exists between customer and tradesman
+            from chat.models import Chat
+            chat = Chat.objects.filter(
+                Q(user1=request.user, user2=job_request.job.owner) | Q(user1=job_request.job.owner, user2=request.user),
+                status='active'
+            ).first()
+            if chat:
+                chat.status = 'job_done'
+                chat.completed_at = timezone.now()
+                chat.save()
             
             # Notify tradesman that job was confirmed
             # REF-028: ChatGPT - Notification creation
@@ -906,7 +959,21 @@ def open_jobs_board(request):
                 q_trade |= Q(trade__icontains=term)
             open_jobs = open_jobs.filter(q_trade)
 
-    return render(request, 'users/open_jobs_board.html', {'open_jobs': open_jobs})
+    # Check which jobs this tradesman has already completed
+    completed_job_ids = set(
+        OpenJobCompletion.objects.filter(tradesman=request.user, status='completed')
+        .values_list('job_id', flat=True)
+    )
+    awaiting_job_ids = set(
+        OpenJobCompletion.objects.filter(tradesman=request.user, status='awaiting_confirmation')
+        .values_list('job_id', flat=True)
+    )
+
+    return render(request, 'users/open_jobs_board.html', {
+        'open_jobs': open_jobs,
+        'completed_job_ids': completed_job_ids,
+        'awaiting_job_ids': awaiting_job_ids,
+    })
 
 
 # Display all notifications for the current user
@@ -941,3 +1008,213 @@ def mark_notification_read(request, notification_id):
     except Notification.DoesNotExist:
         messages.error(request, 'Notification not found.')
         return redirect('dashboard')
+
+
+# Tradesman marks an open-ended job as complete (generates confirmation code)
+# REF-003: Django Views - Function-based views
+# REF-005: Django ORM - get_or_create(), save()
+# REF-006: Django Decorators - @login_required
+# REF-007: Django Messages Framework
+# REF-019: Python UUID - Confirmation code generation
+# REF-028: ChatGPT - Notification creation
+@login_required
+def mark_open_job_complete(request, job_id):
+    profile, _ = Profile.objects.get_or_create(user=request.user, defaults={'role': 'customer'})
+    
+    if profile.role != 'tradesman':
+        return JsonResponse({'error': 'Only tradesmen can mark jobs as complete'}, status=403)
+
+    try:
+        job = Job.objects.select_related('owner').get(id=job_id, owner__profile__role='customer')
+    except Job.DoesNotExist:
+        return JsonResponse({'error': 'Job not found or access denied'}, status=404)
+
+    # Check if already completed
+    completion, created = OpenJobCompletion.objects.get_or_create(
+        job=job,
+        tradesman=request.user,
+        defaults={'status': 'awaiting_confirmation', 'completed_at': timezone.now()}
+    )
+
+    if not created and completion.status == 'completed':
+        messages.info(request, 'This job has already been confirmed by the customer.')
+        return redirect('open_jobs_board')
+
+    # Generate confirmation code if needed
+    if not completion.confirmation_code:
+        completion.confirmation_code = generate_confirmation_code()
+        completion.confirmation_generated_at = timezone.now()
+        completion.status = 'awaiting_confirmation'
+        completion.save()
+
+    # Notify customer
+    Notification.objects.create(
+        user=job.owner,
+        notification_type='job_status',
+        message=f'Your open job "{job.title}" has been marked as complete by {request.user.get_full_name() or request.user.username}. Enter the code to verify.',
+        link=f'/api/users/open-job/{job.id}/verify/'
+    )
+    
+    send_notification_email(
+        job.owner,
+        f'Job Complete: {job.title}',
+        f'Your open job "{job.title}" has been marked as complete by {request.user.get_full_name() or request.user.username}.\n\nConfirmation code: {completion.confirmation_code}\n\nEnter this code to verify completion and leave a review.'
+    )
+
+    return render(request, 'users/open_job_complete.html', {
+        'job': job,
+        'completion': completion,
+        'confirmation_code': completion.confirmation_code
+    })
+
+
+# Customer verifies completion of open-ended job and can leave review
+# REF-003: Django Views - Function-based views
+# REF-005: Django ORM - get(), save()
+# REF-006: Django Decorators - @login_required
+# REF-007: Django Messages Framework
+@login_required
+def verify_open_job_completion(request, job_id):
+    profile, _ = Profile.objects.get_or_create(user=request.user, defaults={'role': 'customer'})
+    
+    if profile.role != 'customer':
+        return JsonResponse({'error': 'Only customers can verify job completion'}, status=403)
+
+    try:
+        job = Job.objects.select_related('owner').get(id=job_id, owner=request.user)
+    except Job.DoesNotExist:
+        return JsonResponse({'error': 'Job not found or access denied'}, status=404)
+
+    try:
+        completion = OpenJobCompletion.objects.select_related('tradesman').get(
+            job=job,
+            status='awaiting_confirmation'
+        )
+    except OpenJobCompletion.DoesNotExist:
+        messages.info(request, 'No completion pending for this job.')
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        submitted_code = request.POST.get('confirmation_code', '').strip().upper()
+
+        if not submitted_code:
+            messages.error(request, 'Confirmation code is required.')
+        elif submitted_code != (completion.confirmation_code or ''):
+            messages.error(request, 'Invalid confirmation code, please try again.')
+        else:
+            # Code matches - mark as completed
+            completion.status = 'completed'
+            completion.confirmed_at = timezone.now()
+            completion.save()
+
+            # Mark chat as JobDone if one exists between customer and tradesman
+            from chat.models import Chat
+            chat = Chat.objects.filter(
+                Q(user1=request.user, user2=completion.tradesman) | Q(user1=completion.tradesman, user2=request.user),
+                status='active'
+            ).first()
+            if chat:
+                chat.status = 'job_done'
+                chat.completed_at = timezone.now()
+                chat.save()
+
+            # Notify tradesman
+            Notification.objects.create(
+                user=completion.tradesman,
+                notification_type='job_status',
+                message=f'Your completion of "{job.title}" has been confirmed by {request.user.get_full_name() or request.user.username}.',
+                link=f'/api/users/open-job/{job.id}/review/'
+            )
+
+            send_notification_email(
+                completion.tradesman,
+                f'Job Confirmed: {job.title}',
+                f'Your completion of "{job.title}" has been confirmed by {request.user.get_full_name() or request.user.username}.\n\nThe customer can now leave a review.'
+            )
+
+            messages.success(request, 'Job confirmed! Please leave a review for the tradesman.')
+            return redirect('submit_open_job_review', job_id=job.id, tradesman_id=completion.tradesman.id)
+
+    return render(request, 'users/verify_open_job_completion.html', {
+        'job': job,
+        'completion': completion
+    })
+
+
+# Customer leaves review for completed open-ended job
+# REF-003: Django Views - Function-based views
+# REF-005: Django ORM - create(), get()
+# REF-006: Django Decorators - @login_required
+# REF-007: Django Messages Framework
+@login_required
+def submit_open_job_review(request, job_id, tradesman_id):
+    profile, _ = Profile.objects.get_or_create(user=request.user, defaults={'role': 'customer'})
+    
+    if profile.role != 'customer':
+        return JsonResponse({'error': 'Only customers can submit reviews'}, status=403)
+
+    try:
+        job = Job.objects.select_related('owner').get(id=job_id, owner=request.user)
+        tradesman = User.objects.get(id=tradesman_id)
+        completion = OpenJobCompletion.objects.get(job=job, tradesman=tradesman, status='completed')
+    except (Job.DoesNotExist, User.DoesNotExist, OpenJobCompletion.DoesNotExist):
+        return JsonResponse({'error': 'Job, tradesman, or completion not found'}, status=404)
+
+    # Check if review already exists - look for JobRequest created for tradesman's job
+    tradesman_job = Job.objects.filter(owner=tradesman, title__startswith=f"Completed: {job.title}").first()
+    if tradesman_job:
+        existing_request = JobRequest.objects.filter(job=tradesman_job, customer=request.user).first()
+        if existing_request and hasattr(existing_request, 'review'):
+            messages.info(request, 'You have already submitted a review for this job.')
+            return redirect('dashboard')
+
+    if request.method == 'POST':
+        try:
+            rating = int(request.POST.get('rating'))
+        except (TypeError, ValueError):
+            rating = None
+
+        comment = request.POST.get('comment', '').strip()
+        photo = request.FILES.get('photo')
+
+        if rating is None or rating < 1 or rating > 5:
+            messages.error(request, 'Please provide a rating between 1 and 5.')
+        else:
+            # Create review for open job completion
+            # Create a JobRequest linking customer to a job owned by the tradesman (for review system)
+            # First, get or create a job owned by the tradesman for this review
+            tradesman_job, _ = Job.objects.get_or_create(
+                owner=tradesman,
+                title=f"Completed: {job.title}",
+                defaults={
+                    'description': f'Completed open job: {job.description}',
+                    'location': job.location,
+                    'trade': job.trade,
+                }
+            )
+            
+            # Create JobRequest so review can be linked (customer requests tradesman's service)
+            job_request, _ = JobRequest.objects.get_or_create(
+                job=tradesman_job,
+                customer=request.user,
+                defaults={'message': f'Completed open job: {job.title}', 'status': 'completed'}
+            )
+            
+            # Only create review if one doesn't exist
+            if not hasattr(job_request, 'review'):
+                JobReview.objects.create(
+                    job_request=job_request,
+                    rating=rating,
+                    comment=comment,
+                    photo=photo,
+                )
+                messages.success(request, 'Thank you for leaving a review!')
+            else:
+                messages.info(request, 'You have already reviewed this job.')
+            return redirect('dashboard')
+
+    return render(request, 'users/submit_open_job_review.html', {
+        'job': job,
+        'tradesman': tradesman,
+        'rating_options': range(1, 6)
+    })
