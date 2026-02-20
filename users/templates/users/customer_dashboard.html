@@ -370,7 +370,7 @@
                                 <a href="{% url 'toggle_favourite' profile.user.id %}?next={{ request.get_full_path }}" class="button tertiary">☆ Save</a>
                             {% endif %}
                             <a href="{% url 'tradesman_profile_detail' profile.id %}" class="button secondary">View Profile</a>
-                            <a href="/chat/" class="button tertiary">Message</a>
+                            <a href="{% url 'chat_detail' profile.user.username %}" class="button tertiary">Message</a>
                         </div>
                     </article>
                 {% endfor %}

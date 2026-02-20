@@ -304,7 +304,7 @@
                                     <a href="{% url 'toggle_favourite' t.user.id %}?next={{ request.get_full_path }}" class="button-link">☆ Save</a>
                                 {% endif %}
                                 <a href="{% url 'tradesman_profile_detail' t.id %}" class="button-link">View profile</a>
-                                <a href="/chat/" class="button-link">Message</a>
+                                <a href="{% url 'chat_detail' t.user.username %}" class="button-link">Message</a>
                             </footer>
                         </div>
                     {% endfor %}

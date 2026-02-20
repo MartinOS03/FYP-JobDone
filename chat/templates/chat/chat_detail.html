@@ -29,11 +29,18 @@
             <h3 style="margin: 0;">Chat with {{ receiver.username }}</h3>
             <a href="{% url 'chat_list' %}" class="back-button">← Back to Chats</a>
         </div>
-        {% for msg in messages %}
-            <div class="message {% if msg.sender == user %}sent{% else %}received{% endif %}">
-                <p><strong>{{ msg.sender.username }}:</strong> {{ msg.content }}</p>
+        {% if messages %}
+            {% for msg in messages %}
+                <div class="message {% if msg.sender == user %}sent{% else %}received{% endif %}">
+                    <p><strong>{{ msg.sender.username }}:</strong> {{ msg.content }}</p>
+                    <small style="color: #999; font-size: 0.85rem;">{{ msg.timestamp|date:"M d, Y H:i" }}</small>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; color: #999; padding: 20px;">
+                <p>No messages yet. Start the conversation!</p>
             </div>
-        {% endfor %}
+        {% endif %}
         <form method="POST">
             {% csrf_token %}
             <input type="text" name="message" placeholder="Type your message..." required>

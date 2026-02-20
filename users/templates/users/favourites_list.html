@@ -59,7 +59,7 @@
                         <p class="meta"><strong>Area:</strong> {{ item.profile.service_area|default:item.profile.location|default:"Nationwide" }}</p>
                         <div class="card-actions">
                             <a href="{% url 'tradesman_profile_detail' item.profile.id %}" class="button primary">View profile</a>
-                            <a href="/chat/" class="button secondary">Message</a>
+                            <a href="{% url 'chat_detail' item.profile.user.username %}" class="button secondary">Message</a>
                             <a href="{% url 'toggle_favourite' item.profile.user.id %}?next={% url 'favourites_list' %}" class="button secondary">Remove from favourites</a>
                         </div>
                     </article>

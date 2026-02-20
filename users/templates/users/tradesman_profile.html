@@ -280,7 +280,7 @@
                     {% else %}
                         <a href="{% url 'toggle_favourite' tradesman.user.id %}?next={{ request.path }}" class="button alt">☆ Save to favourites</a>
                     {% endif %}
-                    <a href="/chat/" class="button">Message {{ tradesman.display_name }}</a>
+                    <a href="{% url 'chat_detail' tradesman.user.username %}" class="button">Message {{ tradesman.display_name }}</a>
                     <a href="{% url 'post_open_job' %}" class="button alt">Post job request</a>
                 </div>
             </div>

@@ -46,7 +46,18 @@ def chat_list(request):
 # REF-018: Tom Dekan - Django chat app tutorial
 @login_required
 def chat_detail(request, username):
-    receiver = User.objects.get(username=username)
+    try:
+        receiver = User.objects.get(username=username)
+    except User.DoesNotExist:
+        from django.http import Http404
+        raise Http404("User not found")
+    
+    # Prevent users from messaging themselves
+    if receiver == request.user:
+        from django.contrib import messages
+        messages.error(request, "You cannot message yourself.")
+        return redirect('chat_list')
+    
     # Get all messages between these two users, ordered chronologically
     # REF-010: Django Q Objects - OR condition for bidirectional message retrieval
     messages = ChatMessage.objects.filter(
