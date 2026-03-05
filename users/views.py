@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
@@ -533,6 +533,8 @@ def confirm_completion(request, request_id):
             job_request.save()
             
             # Mark chat as JobDone if one exists between customer and tradesman
+            # Iteration 5: Auto-complete chat when job is verified
+            # REF-036: ChatGPT - Chat model with Job Done status (auto-completion)
             from chat.models import Chat
             chat = Chat.objects.filter(
                 Q(user1=request.user, user2=job_request.job.owner) | Q(user1=job_request.job.owner, user2=request.user),
@@ -673,6 +675,78 @@ def request_job(request, job_id):
         return redirect('/api/users/dashboard/')
 
     return render(request, 'users/request_job.html', {'job': job})
+
+
+# Direct job request from a tradesman's profile
+# Creates a Job owned by the tradesman and a JobRequest so it appears in their requests list
+# REF-003: Django Views - Function-based views
+# REF-005: Django ORM - create(), get_or_create()
+# REF-006: Django Decorators - @login_required
+# REF-007: Django Messages Framework
+@login_required
+def request_tradesman(request, tradesman_id):
+    profile, created = Profile.objects.get_or_create(
+        user=request.user, defaults={'role': 'customer'}
+    )
+
+    if profile.role != 'customer':
+        return JsonResponse({'error': 'Only customers can request jobs'}, status=403)
+
+    tradesman_user = get_object_or_404(User, id=tradesman_id)
+    tradesman_profile = get_object_or_404(Profile, user=tradesman_user, role='tradesman')
+
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        location = request.POST.get('location', '').strip() or profile.location or tradesman_profile.location
+        hourly_rate = request.POST.get('hourly_rate', '').strip()
+
+        if not description:
+            messages.error(request, 'Please describe the job you want done.')
+            return render(request, 'users/request_tradesman.html', {
+                'tradesman': tradesman_profile,
+                'customer_profile': profile,
+            })
+
+        if not title:
+            title = f'Custom job with {tradesman_profile.display_name}'
+
+        job = Job.objects.create(
+            title=title,
+            description=description,
+            location=location,
+            hourly_rate=hourly_rate or None,
+            owner=tradesman_user,
+            trade=tradesman_profile.trade,
+        )
+
+        job_request = JobRequest.objects.create(
+            job=job,
+            customer=request.user,
+            message=description,
+        )
+
+        Notification.objects.create(
+            user=tradesman_user,
+            notification_type='job_request',
+            message=f'New direct job request from {request.user.get_full_name() or request.user.username} for "{title}"',
+            link=f'/api/users/request/{job_request.id}/'
+        )
+        send_notification_email(
+            tradesman_user,
+            f'New Direct Job Request: {title}',
+            f'You have received a new direct job request from {request.user.get_full_name() or request.user.username}.\n\n'
+            f'Job: {title}\nLocation: {location}\n\nMessage: {description}\n\n'
+            f'View the request in your dashboard.'
+        )
+
+        messages.success(request, f'Request sent to {tradesman_profile.display_name}!')
+        return redirect('/api/users/dashboard/')
+
+    return render(request, 'users/request_tradesman.html', {
+        'tradesman': tradesman_profile,
+        'customer_profile': profile,
+    })
 
 
 
@@ -948,6 +1022,8 @@ def open_jobs_board(request):
     if profile.role != 'tradesman':
         return JsonResponse({'error': 'Only tradesmen can view the open jobs board'}, status=403)
 
+    location_filter = request.GET.get('location', '').strip()
+
     # Get all jobs posted by customers (not tradesmen)
     open_jobs = Job.objects.filter(owner__profile__role='customer').order_by('-date_posted')
     # If tradesman has a trade specified, only show jobs matching that trade (Iteration 4: term expansion)
@@ -958,6 +1034,10 @@ def open_jobs_board(request):
             for term in terms:
                 q_trade |= Q(trade__icontains=term)
             open_jobs = open_jobs.filter(q_trade)
+
+    # Filter by location if provided
+    if location_filter:
+        open_jobs = open_jobs.filter(location__icontains=location_filter)
 
     # Check which jobs this tradesman has already completed
     completed_job_ids = set(
@@ -973,6 +1053,7 @@ def open_jobs_board(request):
         'open_jobs': open_jobs,
         'completed_job_ids': completed_job_ids,
         'awaiting_job_ids': awaiting_job_ids,
+        'location_filter': location_filter,
     })
 
 
@@ -1011,12 +1092,14 @@ def mark_notification_read(request, notification_id):
 
 
 # Tradesman marks an open-ended job as complete (generates confirmation code)
+# Iteration 5: Open job completion workflow
 # REF-003: Django Views - Function-based views
 # REF-005: Django ORM - get_or_create(), save()
 # REF-006: Django Decorators - @login_required
 # REF-007: Django Messages Framework
 # REF-019: Python UUID - Confirmation code generation
 # REF-028: ChatGPT - Notification creation
+# REF-037: ChatGPT - Open-ended job completion workflow
 @login_required
 def mark_open_job_complete(request, job_id):
     profile, _ = Profile.objects.get_or_create(user=request.user, defaults={'role': 'customer'})
@@ -1069,10 +1152,13 @@ def mark_open_job_complete(request, job_id):
 
 
 # Customer verifies completion of open-ended job and can leave review
+# Iteration 5: Open job completion workflow
 # REF-003: Django Views - Function-based views
 # REF-005: Django ORM - get(), save()
 # REF-006: Django Decorators - @login_required
 # REF-007: Django Messages Framework
+# REF-036: ChatGPT - Chat model with Job Done status (auto-completion)
+# REF-037: ChatGPT - Open-ended job completion workflow
 @login_required
 def verify_open_job_completion(request, job_id):
     profile, _ = Profile.objects.get_or_create(user=request.user, defaults={'role': 'customer'})
@@ -1108,6 +1194,8 @@ def verify_open_job_completion(request, job_id):
             completion.save()
 
             # Mark chat as JobDone if one exists between customer and tradesman
+            # Iteration 5: Auto-complete chat when open job is verified
+            # REF-036: ChatGPT - Chat model with Job Done status (auto-completion)
             from chat.models import Chat
             chat = Chat.objects.filter(
                 Q(user1=request.user, user2=completion.tradesman) | Q(user1=completion.tradesman, user2=request.user),
@@ -1142,10 +1230,12 @@ def verify_open_job_completion(request, job_id):
 
 
 # Customer leaves review for completed open-ended job
+# Iteration 5: Open job completion workflow
 # REF-003: Django Views - Function-based views
 # REF-005: Django ORM - create(), get()
 # REF-006: Django Decorators - @login_required
 # REF-007: Django Messages Framework
+# REF-037: ChatGPT - Open-ended job completion workflow
 @login_required
 def submit_open_job_review(request, job_id, tradesman_id):
     profile, _ = Profile.objects.get_or_create(user=request.user, defaults={'role': 'customer'})

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Request {{ tradesman.display_name }} - JobDone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f6fc;
+            margin: 0;
+            padding: 40px 16px;
+        }
+        .card {
+            max-width: 540px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 24px 28px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+        }
+        h1 {
+            margin-top: 0;
+        }
+        label {
+            display: block;
+            margin-top: 12px;
+            font-weight: 600;
+            text-align: left;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        button {
+            margin-top: 18px;
+            padding: 10px 18px;
+            border-radius: 999px;
+            border: none;
+            background-color: #1d4ed8;
+            color: #ffffff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1e40af;
+        }
+        a {
+            color: #1d4ed8;
+            text-decoration: none;
+        }
+        p.meta {
+            color: #6b7280;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Request {{ tradesman.display_name }}</h1>
+        <p class="meta">Send a direct job request to this tradesman. The request will appear in their Requests list.</p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <label for="title">Job title (optional)</label>
+            <input type="text" id="title" name="title" placeholder="e.g. Fix leaking roof">
+
+            <label for="description">Describe the job</label>
+            <textarea id="description" name="description" required placeholder="Explain what needs to be done, when, and any important details."></textarea>
+
+            <label for="location">Location (optional)</label>
+            <input type="text" id="location" name="location" value="{{ customer_profile.location|default:tradesman.location }}" placeholder="e.g. Ballyvourney, Cork">
+
+            <label for="hourly_rate">Budget / hourly rate (optional)</label>
+            <input type="number" step="0.01" id="hourly_rate" name="hourly_rate" placeholder="e.g. 30">
+
+            <button type="submit">Send request</button>
+        </form>
+
+        <p style="margin-top: 14px;"><a href="{% url 'dashboard' %}">← Back to dashboard</a></p>
+    </div>
+</body>
+</html>
+

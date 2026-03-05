@@ -48,6 +48,14 @@
 <body>
     <h2>Open Jobs Posted by Customers</h2>
 
+    <form method="get" style="margin-top: 10px; margin-bottom: 20px;">
+        <label for="location" style="font-weight: 600;">Filter by location:</label>
+        <input type="text" id="location" name="location"
+               value="{{ location_filter }}" placeholder="e.g. Cork, Dublin"
+               style="padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; margin-left: 6px;">
+        <button type="submit" class="button" style="margin-left: 6px;">Apply</button>
+    </form>
+
     {% if not user.profile.trade %}
         <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px auto; max-width: 500px;">
             <p>Please set your trade in your profile to see relevant job opportunities.</p>

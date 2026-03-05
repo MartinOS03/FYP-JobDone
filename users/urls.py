@@ -24,6 +24,7 @@ urlpatterns = [
     path('open-job/<int:job_id>/review/<int:tradesman_id>/', views.submit_open_job_review, name='submit_open_job_review'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
     path('tradesmen/<int:profile_id>/', views.tradesman_profile_detail, name='tradesman_profile_detail'),
+    path('request-tradesman/<int:tradesman_id>/', views.request_tradesman, name='request_tradesman'),
     path('favourites/', views.favourites_list, name='favourites_list'),
     path('favourites/toggle/<int:tradesman_id>/', views.toggle_favourite, name='toggle_favourite'),
     path('notifications/', views.notifications, name='notifications'),
